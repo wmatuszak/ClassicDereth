@@ -656,6 +656,7 @@ void CPlayerWeenie::OnDeath(DWORD killer_id)
 	}
 
 	double PreDeathVitaeValue = m_Qualities.GetVitaeValue();
+	int currentLevel = InqIntQuality(LEVEL_INT, 1);
 
 	UpdateVitaePool(0);
 	ReduceVitae(0.05f);
@@ -669,9 +670,9 @@ void CPlayerWeenie::OnDeath(DWORD killer_id)
 			{
 				if(PreDeathVitaeValue >= 1.0 || g_pConfig->EnablePKTrophyWithVitae())
 				{
-					if (g_pConfig->PKTrophyID(level) > 0)
+					if (g_pConfig->PKTrophyID(currentLevel) > 0)
 					{
-						CWeenieObject *pktrophyitem = g_pWeenieFactory->CreateWeenieByClassID(g_pConfig->PKTrophyID(level), NULL, true);
+						CWeenieObject *pktrophyitem = g_pWeenieFactory->CreateWeenieByClassID(g_pConfig->PKTrophyID(currentLevel), NULL, true);
 						(pKiller->AsContainer())->SpawnInContainer(pktrophyitem);
 					}
 				}
