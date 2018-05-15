@@ -1845,7 +1845,6 @@ void CClientEvents::ProcessEvent(BinaryReader *pReader)
 			}
 		case 0x0035: //Use Item Ex
 			{
-				//SendText("Use extended not implemented yet.", 9);
 				DWORD dwSourceID = pReader->ReadDWORD();
 				DWORD dwDestID = pReader->ReadDWORD();
 				if (pReader->GetLastError()) break;

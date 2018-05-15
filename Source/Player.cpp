@@ -655,6 +655,8 @@ void CPlayerWeenie::OnDeath(DWORD killer_id)
 		NotifyPositionStatUpdated(LAST_OUTSIDE_DEATH_POSITION, true);
 	}
 
+	double PreDeathVitaeValue = m_Qualities.GetVitaeValue();
+
 	UpdateVitaePool(0);
 	ReduceVitae(0.05f);
 	UpdateVitaeEnchantment();
@@ -665,10 +667,13 @@ void CPlayerWeenie::OnDeath(DWORD killer_id)
 		{
 			if (IsPK() && pKiller->_IsPlayer())
 			{
-				if (g_pConfig->PKTrophyID(level) > 0)
+				if(PreDeathVitaeValue >= 1.0 || g_pConfig->EnablePKTrophyWithVitae())
 				{
-					CWeenieObject *pktrophyitem = g_pWeenieFactory->CreateWeenieByClassID(g_pConfig->PKTrophyID(level), NULL, true);
-					(pKiller->AsContainer())->SpawnInContainer(pktrophyitem);
+					if (g_pConfig->PKTrophyID(level) > 0)
+					{
+						CWeenieObject *pktrophyitem = g_pWeenieFactory->CreateWeenieByClassID(g_pConfig->PKTrophyID(level), NULL, true);
+						(pKiller->AsContainer())->SpawnInContainer(pktrophyitem);
+					}
 				}
 
 				m_Qualities.SetFloat(PK_TIMESTAMP_FLOAT, Timer::cur_time + g_pConfig->PKRespiteTime());
@@ -2353,7 +2358,7 @@ void CPlayerWeenie::PerformUseModifications(int index, CCraftOperation *op, CWee
 					case TINKER_NAME_STRING:
 					case IMBUER_NAME_STRING:
 					case CRAFTSMAN_NAME_STRING:
-						value = modificationSource->InqStringQuality(NAME_STRING, "");
+						value = this->InqStringQuality(NAME_STRING, "");
 						break;
 					default:
 						value = modificationSource->InqStringQuality(stringMod._stat, "");
@@ -2370,7 +2375,7 @@ void CPlayerWeenie::PerformUseModifications(int index, CCraftOperation *op, CWee
 					case TINKER_NAME_STRING:
 					case IMBUER_NAME_STRING:
 					case CRAFTSMAN_NAME_STRING:
-						value = modificationSource->InqStringQuality(NAME_STRING, "");
+						value = this->InqStringQuality(NAME_STRING, "");
 						break;
 					default:
 						value = modificationSource->InqStringQuality(stringMod._stat, "");
@@ -2504,7 +2509,7 @@ void CPlayerWeenie::PerformUseModifications(int index, CCraftOperation *op, CWee
 					{
 					case ALLOWED_WIELDER_IID:
 					case ALLOWED_ACTIVATOR_IID:
-						value = modificationSource->GetID();
+						value = this->GetID();
 						break;
 					default:
 						value = modificationSource->InqIIDQuality(iidMod._stat, 0);
@@ -2520,7 +2525,7 @@ void CPlayerWeenie::PerformUseModifications(int index, CCraftOperation *op, CWee
 					{
 					case ALLOWED_WIELDER_IID:
 					case ALLOWED_ACTIVATOR_IID:
-						value = modificationSource->GetID();
+						value = this->GetID();
 						break;
 					default:
 						value = modificationSource->InqIIDQuality(iidMod._stat, 0);
@@ -3163,6 +3168,8 @@ void CWandSpellUseEvent::OnReadyToUse()
 		_newManaValue = itemCurrentMana - manaCost;
 	}
 
+	_weenie->MakeSpellcastingManager()->m_bCasting = true;
+
 	if (motion)
 		ExecuteUseAnimation(motion);
 	else
@@ -3186,6 +3193,20 @@ void CWandSpellUseEvent::OnUseAnimSuccess(DWORD motion)
 	_weenie->MakeSpellcastingManager()->CastSpellInstant(_targetId, _spellId);
 	_weenie->DoForcedStopCompletely();
 	Done();
+}
+
+void CWandSpellUseEvent::Cancel(DWORD error)
+{
+	_weenie->MakeSpellcastingManager()->m_bCasting = false;
+
+	CUseEventData::Cancel(error);
+}
+
+void CWandSpellUseEvent::Done(DWORD error)
+{
+	_weenie->MakeSpellcastingManager()->m_bCasting = false;
+
+	CUseEventData::Done(error);
 }
 
 void CLifestoneRecallUseEvent::OnReadyToUse()
